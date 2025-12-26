@@ -18,12 +18,13 @@
             );
             if (response.ok) {
                 const data = await response.json();
-                balance = data.balance || 1000.0;
-                margin = data.margin || 100.0;
-                leverage = data.leverage || 10;
-                slPercent = data.sl_percent || 2.0;
-                trailingCallback = data.trailing_callback || 1.0;
-                autoRisk = data.auto_risk || false;
+                balance = data.balance ?? 1000.0;
+                margin = data.margin ?? 100.0;
+                leverage = data.leverage ?? 10;
+                // Convert raw (0.02) to percentage (2.0)
+                slPercent = (data.sl_percent ?? 0.02) * 100;
+                trailingCallback = (data.trailing_callback ?? 0.01) * 100;
+                autoRisk = data.auto_risk ?? false;
             }
         } catch (error) {
             console.error("Failed to fetch settings:", error);
@@ -43,8 +44,9 @@
                         balance,
                         margin,
                         leverage,
-                        sl_percent: slPercent,
-                        trailing_callback: trailingCallback,
+                        // Convert percentage (2.0) to raw (0.02)
+                        sl_percent: slPercent / 100,
+                        trailing_callback: trailingCallback / 100,
                         auto_risk: autoRisk,
                     }),
                 },
@@ -58,6 +60,28 @@
             }
         } catch (error) {
             message = "❌ Error: " + error;
+        }
+    }
+
+    async function resetHistory() {
+        if (!confirm("Are you sure you want to clear all trade history?"))
+            return;
+
+        try {
+            const response = await fetch(
+                "http://localhost:8080/api/trades/reset",
+                {
+                    method: "POST",
+                },
+            );
+            if (response.ok) {
+                message = "🗑️ Trade history cleared!";
+                setTimeout(() => (message = ""), 3000);
+            } else {
+                message = "❌ Failed to reset history";
+            }
+        } catch (err) {
+            message = "❌ Error: " + err;
         }
     }
 </script>
@@ -179,6 +203,23 @@
                     {message}
                 </div>
             {/if}
+        </div>
+
+        <div class="settings-section danger-zone">
+            <h2>🚨 Danger Zone</h2>
+            <div class="setting-item">
+                <div class="settings-header">
+                    <label>Reset Trade History</label>
+                </div>
+                <div class="control">
+                    <button class="btn-danger" onclick={resetHistory}>
+                        🗑️ Clear All Trades
+                    </button>
+                    <div class="help-text">
+                        This helps when restarting a simulation.
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="info-box">

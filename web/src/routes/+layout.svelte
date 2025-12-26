@@ -1,29 +1,30 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
-	
+	import favicon from "$lib/assets/favicon.svg";
+	import "../app.css";
+	import Icon from "@iconify/svelte";
+	import { page } from "$app/stores";
+	import { onMount } from "svelte";
+
 	let { children } = $props();
 	let sidebarOpen = $state(true);
-	
+
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
 	}
-	
+
 	onMount(() => {
-		// Auto-collapse on mobile
 		if (window.innerWidth < 768) {
 			sidebarOpen = false;
 		}
 	});
-	
+
 	const navItems = [
-		{ href: '/', icon: '📊', label: 'Dashboard' },
-		{ href: '/screener', icon: '🎯', label: 'Screener' },
-		{ href: '/positions', icon: '📈', label: 'Positions' },
-		{ href: '/history', icon: '📜', label: 'History' },
-		{ href: '/analytics', icon: '📉', label: 'Analytics' },
-		{ href: '/settings', icon: '⚙️', label: 'Settings' }
+		{ href: "/", icon: "mdi:view-dashboard", label: "Dashboard" },
+		{ href: "/screener", icon: "mdi:magnify", label: "Scanner" },
+		{ href: "/positions", icon: "mdi:chart-line", label: "Trades" },
+		{ href: "/history", icon: "mdi:history", label: "History" },
+		{ href: "/analytics", icon: "mdi:chart-bar", label: "Analytics" },
+		{ href: "/settings", icon: "mdi:cog", label: "Settings" },
 	];
 </script>
 
@@ -32,229 +33,216 @@
 </svelte:head>
 
 <div class="app-layout">
-	<!-- Sidebar -->
 	<aside class="sidebar" class:collapsed={!sidebarOpen}>
 		<div class="sidebar-header">
 			<div class="logo">
-				<span class="logo-icon">⚡</span>
+				<div class="logo-icon-wrapper">
+					<Icon icon="mdi:lightning-bolt" width="24" />
+				</div>
 				{#if sidebarOpen}
-					<span class="logo-text">Scalping Pro</span>
+					<span class="logo-text">ScalpPRO</span>
 				{/if}
 			</div>
-			<button class="toggle-btn" onclick={toggleSidebar}>
-				{sidebarOpen ? '◀' : '▶'}
-			</button>
 		</div>
-		
+
 		<nav class="sidebar-nav">
 			{#each navItems as item}
-				<a 
-					href={item.href} 
-					class="nav-item" 
+				<a
+					href={item.href}
+					class="nav-item"
 					class:active={$page.url.pathname === item.href}
 				>
-					<span class="nav-icon">{item.icon}</span>
+					<span class="nav-icon">
+						<Icon icon={item.icon} width="20" />
+					</span>
 					{#if sidebarOpen}
 						<span class="nav-label">{item.label}</span>
 					{/if}
 				</a>
 			{/each}
 		</nav>
-		
+
 		<div class="sidebar-footer">
 			{#if sidebarOpen}
 				<div class="user-info">
 					<div class="status-dot"></div>
-					<span>System Online</span>
+					<span class="font-mono text-xs">SYSTEM ONLINE</span>
 				</div>
 			{/if}
 		</div>
 	</aside>
-	
-	<!-- Main Content -->
+
 	<main class="main-content">
 		{@render children()}
 	</main>
 </div>
 
 <style>
-	:global(body) {
-		margin: 0;
-		padding: 0;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-	}
-
 	.app-layout {
 		display: flex;
 		height: 100vh;
-		background: #0a0e1a;
-		color: #e2e8f0;
+		background: var(--bg-app);
+		color: var(--text-primary);
 		overflow: hidden;
 	}
-	
+
 	.sidebar {
 		width: 260px;
-		background: linear-gradient(180deg, #1a1f2e 0%, #0f1419 100%);
-		border-right: 1px solid #2d3748;
+		background: var(--bg-surface);
+		border-right: 1px solid var(--border-color);
 		display: flex;
 		flex-direction: column;
 		transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		position: relative;
-		z-index: 100;
+		z-index: 50;
 	}
-	
+
 	.sidebar.collapsed {
-		width: 70px;
+		width: 80px;
 	}
-	
+
 	.sidebar-header {
+		height: 80px;
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		padding: 1.5rem 1rem;
-		border-bottom: 1px solid #2d3748;
+		justify-content: center;
+		border-bottom: 1px solid var(--border-color);
 	}
-	
+
+	.sidebar.collapsed .sidebar-header {
+		padding: 0;
+	}
+
+	.sidebar:not(.collapsed) .sidebar-header {
+		justify-content: flex-start;
+		padding-left: 1.5rem;
+	}
+
 	.logo {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		font-weight: 600;
+		font-weight: 700;
 		font-size: 1.25rem;
+		color: var(--text-primary);
+		letter-spacing: -0.02em;
 	}
-	
-	.logo-icon {
-		font-size: 1.5rem;
-		filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
-	}
-	
-	.logo-text {
-		background: linear-gradient(135deg, #ffd700, #ff8c00);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		white-space: nowrap;
-	}
-	
-	.toggle-btn {
-		background: #2d3748;
-		border: none;
-		color: #a0aec0;
-		width: 32px;
-		height: 32px;
-		border-radius: 8px;
-		cursor: pointer;
+
+	.logo-icon-wrapper {
+		width: 40px;
+		height: 40px;
+		background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+		border-radius: 10px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.2s;
+		box-shadow: 0 4px 12px var(--accent-glow);
+		color: white;
 	}
-	
-	.toggle-btn:hover {
-		background: #4a5568;
-		color: #e2e8f0;
-	}
-	
+
 	.sidebar-nav {
 		flex: 1;
-		padding: 1rem 0;
+		padding: 1.5rem 0.75rem;
 		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
 	}
-	
+
 	.nav-item {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		padding: 0.875rem 1.25rem;
-		margin: 0.25rem 0.75rem;
-		border-radius: 10px;
+		padding: 0 1rem;
+		height: 48px;
+		border-radius: var(--radius-md);
 		text-decoration: none;
-		color: #a0aec0;
+		color: var(--text-secondary);
 		transition: all 0.2s;
 		font-weight: 500;
 		white-space: nowrap;
+		position: relative;
 	}
-	
+
+	.sidebar.collapsed .nav-item {
+		padding: 0;
+		justify-content: center;
+	}
+
 	.nav-item:hover {
-		background: rgba(255, 255, 255, 0.05);
-		color: #e2e8f0;
-		transform: translateX(4px);
+		color: var(--text-primary);
+		background: rgba(255, 255, 255, 0.03);
 	}
-	
+
 	.nav-item.active {
-		background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
-		color: #60a5fa;
-		border-left: 3px solid #3b82f6;
+		background: rgba(59, 130, 246, 0.1);
+		color: var(--accent-primary);
 	}
-	
+
 	.nav-icon {
-		font-size: 1.5rem;
-		min-width: 28px;
-		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
 	}
-	
+
 	.sidebar-footer {
-		padding: 1rem;
-		border-top: 1px solid #2d3748;
+		padding: 1.5rem;
+		border-top: 1px solid var(--border-color);
+		display: flex;
+		justify-content: center;
 	}
-	
+
+	.sidebar:not(.collapsed) .sidebar-footer {
+		justify-content: flex-start;
+	}
+
 	.user-info {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.875rem;
-		color: #68d391;
+		gap: 0.75rem;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		letter-spacing: 0.05em;
 	}
-	
+
 	.status-dot {
 		width: 8px;
 		height: 8px;
-		background: #68d391;
+		background: var(--status-success);
 		border-radius: 50%;
+		box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 		animation: pulse 2s infinite;
 	}
-	
+
 	@keyframes pulse {
-		0%, 100% {
+		0% {
 			opacity: 1;
-			box-shadow: 0 0 8px rgba(104, 211, 145, 0.6);
+			box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
 		}
-		50% {
-			opacity: 0.6;
-			box-shadow: 0 0 12px rgba(104, 211, 145, 0.8);
+		70% {
+			opacity: 1;
+			box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+		}
+		100% {
+			opacity: 1;
+			box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
 		}
 	}
-	
+
 	.main-content {
 		flex: 1;
 		overflow-y: auto;
-		background: #0a0e1a;
+		background: var(--bg-app);
+		padding: 0;
 	}
-	
-	/* Mobile Responsive */
+
 	@media (max-width: 768px) {
 		.sidebar:not(.collapsed) {
-			position: absolute;
+			position: fixed;
 			height: 100%;
-			box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+			width: 80%;
+			box-shadow: var(--shadow-lg);
 		}
-	}
-	
-	/* Scrollbar styling */
-	.sidebar-nav::-webkit-scrollbar {
-		width: 6px;
-	}
-	
-	.sidebar-nav::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	
-	.sidebar-nav::-webkit-scrollbar-thumb {
-		background: #2d3748;
-		border-radius: 3px;
-	}
-	
-	.sidebar-nav::-webkit-scrollbar-thumb:hover {
-		background: #4a5568;
 	}
 </style>

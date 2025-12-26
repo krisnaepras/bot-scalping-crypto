@@ -5,324 +5,415 @@
         screenerData,
         connectionStatus,
     } from "$lib/stores";
+    import Icon from "@iconify/svelte";
 
-    // Subscribe to stores - data is instantly available!
     $: topScreener = $screenerData.slice(0, 5);
     $: active = $openPositions > 0;
 </script>
 
 <div class="dashboard">
     <header class="dashboard-header">
-        <div class="title-section">
-            <h1>📊 Dashboard</h1>
-            <div
-                class="live-badge {$connectionStatus === 'connected'
-                    ? 'active'
-                    : ''}"
+        <div class="header-title">
+            <h1>Dashboard</h1>
+            <p class="subtitle">
+                Overview of market activity and account status
+            </p>
+        </div>
+        <div
+            class="status-badge"
+            class:live={$connectionStatus === "connected"}
+        >
+            <div class="pulse-dot"></div>
+            <span
+                >{$connectionStatus === "connected"
+                    ? "LIVE DATA"
+                    : "OFFLINE"}</span
             >
-                <div class="pulse-dot"></div>
-                {#if $connectionStatus === "connected"}
-                    LIVE (WebSocket)
-                {:else if $connectionStatus === "connecting"}
-                    Connecting...
-                {:else}
-                    Reconnecting...
-                {/if}
-            </div>
         </div>
     </header>
 
-    <div class="stats">
-        <div class="stat-card">
-            <div class="stat-icon">💰</div>
+    <div class="overview-grid">
+        <div class="card stat-card">
+            <div class="stat-icon-wrapper wallet">
+                <Icon icon="mdi:wallet" width="28" />
+            </div>
             <div class="stat-content">
-                <span class="stat-label">Balance</span>
-                <span class="stat-value">${$balance.toFixed(2)}</span>
+                <span class="stat-label">Total Balance</span>
+                <span class="stat-value font-mono">${$balance.toFixed(2)}</span>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
+        <div class="card stat-card">
+            <div class="stat-icon-wrapper chart">
+                <Icon icon="mdi:chart-line" width="28" />
+            </div>
             <div class="stat-content">
                 <span class="stat-label">Open Positions</span>
-                <span class="stat-value">{$openPositions}</span>
+                <span class="stat-value font-mono">{$openPositions}</span>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon">{active ? "🟢" : "🔴"}</div>
+        <div class="card stat-card">
+            <div class="stat-icon-wrapper activity">
+                <Icon icon="mdi:lightning-bolt" width="28" />
+            </div>
             <div class="stat-content">
-                <span class="stat-label">Status</span>
-                <span class="stat-value">{active ? "Active" : "Idle"}</span>
+                <span class="stat-label">System Status</span>
+                <span class="stat-value"
+                    >{active ? "Trading Active" : "Scanning"}</span
+                >
             </div>
         </div>
     </div>
 
-    <div class="content-grid">
-        <div class="panel guide">
-            <h2>🚀 Quick Guide</h2>
-            <ul>
-                <li>
-                    <strong>Screener:</strong> Monitor top volatile pairs with trend
-                    scores
-                </li>
-                <li>
-                    <strong>Positions:</strong> Track active trades with real-time
-                    P&L
-                </li>
-                <li>
-                    <strong>History:</strong> Review past trades and performance
-                </li>
-                <li>
-                    <strong>Settings:</strong> Configure margin, leverage, and risk
-                    management
-                </li>
-            </ul>
+    <div class="content-cols">
+        <div class="col-main">
+            <div class="card full-height">
+                <div class="card-header-row">
+                    <h3>
+                        <Icon
+                            icon="mdi:magnify"
+                            width="20"
+                            style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"
+                        /> Top Opportunities
+                    </h3>
+                    <a href="/screener" class="btn btn-secondary btn-sm"
+                        >View Scanner</a
+                    >
+                </div>
+
+                <div class="opportunities-list">
+                    {#if topScreener.length === 0}
+                        <div class="empty-state">
+                            <span class="loading-pulse"
+                                >Scanning markets...</span
+                            >
+                        </div>
+                    {:else}
+                        {#each topScreener as coin}
+                            <div class="opportunity-row">
+                                <div class="coin-info">
+                                    <span class="coin-symbol"
+                                        >{coin.symbol}</span
+                                    >
+                                    <span class="coin-price font-mono"
+                                        >${coin.price.toFixed(4)}</span
+                                    >
+                                </div>
+                                <div class="coin-metrics">
+                                    <span
+                                        class="coin-change font-mono"
+                                        class:text-success={coin.change_24h > 0}
+                                        class:text-danger={coin.change_24h < 0}
+                                    >
+                                        {coin.change_24h > 0
+                                            ? "+"
+                                            : ""}{coin.change_24h.toFixed(2)}%
+                                    </span>
+                                    <div class="trend-bar">
+                                        <div
+                                            class="trend-fill"
+                                            style="width: {Math.abs(
+                                                coin.trend_score,
+                                            )}%; background: {coin.trend_score >
+                                            0
+                                                ? 'var(--status-success)'
+                                                : 'var(--status-danger)'}"
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        {/each}
+                    {/if}
+                </div>
+            </div>
         </div>
 
-        {#if topScreener.length > 0}
-            <div class="panel preview">
-                <h2>🎯 Top Opportunities</h2>
-                <div class="opportunities-list">
-                    {#each topScreener as coin}
-                        <div class="opportunity-item">
-                            <div class="coin-info">
-                                <span class="coin-symbol">{coin.symbol}</span>
-                                <span
-                                    class="coin-change"
-                                    class:positive={coin.change_24h > 0}
-                                    class:negative={coin.change_24h < 0}
-                                >
-                                    {coin.change_24h > 0
-                                        ? "+"
-                                        : ""}{coin.change_24h.toFixed(2)}%
-                                </span>
-                            </div>
-                            <div class="coin-metrics">
-                                <span class="metric">
-                                    Vol: ${(coin.volume / 1e6).toFixed(1)}M
-                                </span>
-                                <span
-                                    class="trend-score"
-                                    class:bullish={coin.trend_score > 0}
-                                    class:bearish={coin.trend_score < 0}
-                                >
-                                    Score: {coin.trend_score?.toFixed(1) ||
-                                        "N/A"}
-                                </span>
-                            </div>
-                        </div>
-                    {/each}
+        <div class="col-side">
+            <div class="card full-height">
+                <div class="card-header-row">
+                    <h3>System Log</h3>
                 </div>
-                <a href="/screener" class="view-all">View All →</a>
+                <div class="system-log">
+                    <div class="log-item">
+                        <span class="log-time font-mono">12:00:01</span>
+                        <span class="log-msg">Scanning 50 pairs...</span>
+                    </div>
+                    <div class="log-item">
+                        <span class="log-time font-mono">12:00:05</span>
+                        <span class="log-msg">Updated market data</span>
+                    </div>
+                </div>
             </div>
-        {/if}
+        </div>
     </div>
 </div>
 
 <style>
     .dashboard {
         padding: 2rem;
-        height: 100%;
-        overflow-y: auto;
+        max-width: 1600px;
+        margin: 0 auto;
+        animation: fade-in 0.5s ease;
+    }
+
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
         margin-bottom: 2rem;
     }
 
-    .title-section {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+    .header-title h1 {
+        font-size: 1.875rem;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.02em;
     }
 
-    .title-section h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #06b6d4, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+    .subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
     }
 
-    .live-badge {
+    .status-badge {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.3);
         padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #10b981;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+    }
+
+    .status-badge.live {
+        color: var(--status-success);
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.2);
     }
 
     .pulse-dot {
         width: 8px;
         height: 8px;
-        background: #10b981;
+        background: currentColor;
         border-radius: 50%;
         animation: pulse 2s infinite;
-    }
-
-    .kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .kpi-card {
-        background: #1e1e1e;
-        border-radius: 12px;
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        border: 1px solid #333;
-        transition: all 0.3s ease;
-    }
-
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    .kpi-icon {
-        font-size: 2.5rem;
-    }
-
-    .kpi-content {
-        flex: 1;
-    }
-
-    .kpi-label {
-        font-size: 0.875rem;
-        color: #9ca3af;
-        margin-bottom: 0.25rem;
-    }
-
-    .kpi-value {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #e5e7eb;
-    }
-
-    .content-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .panel {
-        background: #1e1e1e;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 1px solid #333;
-    }
-
-    .panel h2 {
-        margin-bottom: 1rem;
-        font-size: 1.25rem;
-        color: #e5e7eb;
-    }
-
-    .guide ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .guide li {
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #333;
-        color: #9ca3af;
-    }
-
-    .guide li:last-child {
-        border-bottom: none;
-    }
-
-    .guide strong {
-        color: #06b6d4;
-    }
-
-    .opportunities-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .opportunity-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem;
-        background: #2b2b2b;
-        border-radius: 8px;
-    }
-
-    .coin-info {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .coin-symbol {
-        font-weight: 600;
-        color: #06b6d4;
-    }
-
-    .coin-change {
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-
-    .coin-change.positive {
-        color: #10b981;
-    }
-
-    .coin-change.negative {
-        color: #ef4444;
-    }
-
-    .trend-score {
-        padding: 0.25rem 0.75rem;
-        border-radius: 8px;
-        background: #333;
-        color: #9ca3af;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-    .trend-score.strong {
-        background: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-    }
-
-    .view-all {
-        display: inline-block;
-        color: #06b6d4;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-    .view-all:hover {
-        text-decoration: underline;
     }
 
     @keyframes pulse {
         0%,
         100% {
             opacity: 1;
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
         }
         50% {
-            opacity: 0.6;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
+            opacity: 0.5;
+        }
+    }
+
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .stat-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .stat-icon-wrapper.wallet {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.4);
+    }
+
+    .stat-icon-wrapper.chart {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        box-shadow: 0 8px 16px -4px rgba(139, 92, 246, 0.4);
+    }
+
+    .stat-icon-wrapper.activity {
+        background: linear-gradient(135deg, #10b981, #059669);
+        box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.4);
+    }
+
+    .stat-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+    }
+
+    .content-cols {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .full-height {
+        height: 100%;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header-row h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .opportunities-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .opportunity-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--bg-surface-hover);
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        transition: all 0.2s;
+    }
+
+    .opportunity-row:hover {
+        border-color: var(--border-color);
+        transform: translateX(4px);
+    }
+
+    .coin-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .coin-symbol {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .coin-price {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .coin-metrics {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        min-width: 150px;
+        justify-content: flex-end;
+    }
+
+    .coin-change {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .text-success {
+        color: var(--status-success);
+    }
+    .text-danger {
+        color: var(--status-danger);
+    }
+
+    .trend-bar {
+        width: 60px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .trend-fill {
+        height: 100%;
+        border-radius: 2px;
+    }
+
+    .system-log {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .log-item {
+        display: flex;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .log-time {
+        color: var(--text-muted);
+    }
+
+    .loading-pulse {
+        animation: pulse 1s infinite alternate;
+        color: var(--text-muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    @media (max-width: 1024px) {
+        .content-cols {
+            grid-template-columns: 1fr;
         }
     }
 </style>

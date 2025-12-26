@@ -15,19 +15,21 @@
 
 <div class="positions-page">
     <div class="page-header">
-        <h1>📊 Active Positions</h1>
-        <p>
-            Real-time WebSocket monitoring
-            <span class="connection-status status-{$connectionStatus}">
-                {#if $connectionStatus === "connected"}
-                    🟢 Live
-                {:else if $connectionStatus === "connecting"}
-                    🟡 Connecting...
-                {:else}
-                    🔴 Disconnected
-                {/if}
-            </span>
-        </p>
+        <div class="header-content">
+            <h1>📊 Active Positions</h1>
+            <p>Real-time WebSocket monitoring</p>
+        </div>
+        <div
+            class="status-badge"
+            class:live={$connectionStatus === "connected"}
+        >
+            <div class="pulse-dot"></div>
+            <span
+                >{$connectionStatus === "connected"
+                    ? "LIVE MONITOR"
+                    : "OFFLINE"}</span
+            >
+        </div>
         <div class="stats-bar">
             <div class="stat-item">
                 <span class="stat-label">Total Positions:</span>
@@ -58,7 +60,7 @@
             {#each $positions as position (position.symbol)}
                 {@const pnl = calculatePnL(position)}
                 <div
-                    class="position-card"
+                    class="card position-card"
                     class:long={position.side === "Long"}
                     class:short={position.side === "Short"}
                 >
@@ -68,9 +70,9 @@
                             <div class="duration">{formatDuration()}</div>
                         </div>
                         <div
-                            class="side-badge"
-                            class:long={position.side === "Long"}
-                            class:short={position.side === "Short"}
+                            class="badge"
+                            class:success={position.side === "Long"}
+                            class:danger={position.side === "Short"}
                         >
                             {position.side}
                         </div>
@@ -300,28 +302,17 @@
     .price-section {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #333;
-    }
-
-    .price-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .price-label {
-        font-size: 0.75rem;
-        color: #9ca3af;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px solid var(--border-color);
     }
 
     .price-value {
         font-size: 1.125rem;
         font-weight: 600;
-        font-family: "Courier New", monospace;
-        color: #e5e7eb;
+        font-family: var(--font-mono);
+        color: var(--text-primary);
     }
 
     .price-value.current {

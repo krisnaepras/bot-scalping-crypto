@@ -1,5 +1,7 @@
 <script lang="ts">
-    import { screenerData, connectionStatus } from "$lib/stores";
+    import { screenerData, connectionStatus, wsManager } from "$lib/stores";
+    import Icon from "@iconify/svelte";
+    import { onMount } from "svelte";
 
     let currentPage = 1;
     let itemsPerPage = 10;
@@ -17,30 +19,35 @@
     function prevPage() {
         if (currentPage > 1) currentPage--;
     }
+
+    onMount(async () => {
+        // Request notification permission
+        await wsManager.requestNotificationPermission();
+    });
 </script>
 
 <div class="screener-page">
     <div class="page-header">
-        <h1>🔍 Market Screener</h1>
+        <h1>
+            <Icon
+                icon="mdi:magnify"
+                width="32"
+                style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"
+            /> Market Scanner
+        </h1>
         <p>
             Top 10 pairs shown (Total: {$screenerData.length})
-            <span
-                class="connection-badge {$connectionStatus === 'connected'
-                    ? 'live'
-                    : ''}"
-            >
-                {#if $connectionStatus === "connected"}
-                    • 🟢 Real-time WebSocket
-                {:else if $connectionStatus === "connecting"}
-                    • 🟡 Connecting...
-                {:else}
-                    • 🔴 Reconnecting...
-                {/if}
-            </span>
         </p>
-        <div class="live-badge">
+        <div
+            class="status-badge"
+            class:live={$connectionStatus === "connected"}
+        >
             <div class="pulse-dot"></div>
-            LIVE
+            <span
+                >{$connectionStatus === "connected"
+                    ? "LIVE FEED"
+                    : "CONNECTING"}</span
+            >
         </div>
     </div>
 
@@ -58,6 +65,7 @@
                         <th>24h Change</th>
                         <th>Volume</th>
                         <th>Trend Score</th>
+                        <th>Entry Signal</th>
                         <th>Volatility</th>
                     </tr>
                 </thead>
@@ -106,6 +114,28 @@
                                             : "-"}
                                     </div>
                                 </td>
+                                <td class="entry-signal">
+                                    {#if coin.entry_signal}
+                                        <div
+                                            class="signal-badge"
+                                            class:long={coin.entry_signal ===
+                                                "LONG"}
+                                            class:short={coin.entry_signal ===
+                                                "SHORT"}
+                                        >
+                                            <span class="signal-text"
+                                                >{coin.entry_signal} NOW</span
+                                            >
+                                            <span class="signal-strength"
+                                                >⚡{coin.signal_strength.toFixed(
+                                                    0,
+                                                )}%</span
+                                            >
+                                        </div>
+                                    {:else}
+                                        <span class="no-signal">-</span>
+                                    {/if}
+                                </td>
                                 <td class="score">{coin.score.toFixed(2)}</td>
                             </tr>
                         {/each}
@@ -150,11 +180,28 @@
     .page-header h1 {
         font-size: 2rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #10b981, #06b6d4);
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        flex: 1;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .inline-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .inline-icon :global(svg) {
+        width: 28px;
+        height: 28px;
+        color: var(--accent-primary);
     }
 
     .page-header p {
@@ -198,9 +245,11 @@
     }
 
     .table-container {
-        background: #1e1e1e;
-        border-radius: 12px;
+        background: var(--bg-surface);
+        border-radius: var(--radius-lg);
         overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
     }
 
     table {
@@ -211,40 +260,44 @@
     }
 
     thead {
-        background: #2b2b2b;
+        background: var(--bg-surface-hover);
     }
 
     th {
         text-align: left;
         padding: 0.75rem;
-        color: #9ca3af;
+        color: var(--text-secondary);
         font-weight: 600;
         font-size: 0.875rem;
-        border-bottom: 2px solid #333;
+        border-bottom: 1px solid var(--border-color);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     tr {
-        border-bottom: 1px solid #2b2b2b;
+        border-bottom: 1px solid rgba(45, 51, 66, 0.5);
         transition: all 0.2s ease;
     }
 
     tr:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
     }
 
     td {
         padding: 0.75rem;
         font-size: 0.875rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
     }
 
     .symbol {
         font-weight: 600;
-        color: #06b6d4;
+        color: var(--accent-primary);
     }
 
     .price {
-        font-family: "Courier New", monospace;
-        font-weight: 600;
+        font-family: var(--font-mono);
+        font-weight: 500;
     }
 
     .change {
@@ -324,6 +377,63 @@
         50% {
             opacity: 0.6;
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
+        }
+    }
+
+    /* Entry Signal Styles */
+    .entry-signal {
+        text-align: center;
+    }
+
+    .signal-badge {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-weight: 700;
+        animation: signal-pulse 2s ease-in-out infinite;
+    }
+
+    .signal-badge.long {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 2px solid #10b981;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+
+    .signal-badge.short {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 2px solid #ef4444;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+
+    .signal-text {
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+    }
+
+    .signal-strength {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+
+    .no-signal {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    @keyframes signal-pulse {
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05);
         }
     }
 </style>

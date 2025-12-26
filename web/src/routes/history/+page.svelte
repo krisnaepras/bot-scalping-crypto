@@ -429,9 +429,11 @@
     }
 
     .table-container {
-        background: #1e1e1e;
-        border-radius: 12px;
+        background: var(--bg-surface);
+        border-radius: var(--radius-lg);
         overflow-x: auto;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
     }
 
     table {
@@ -440,25 +442,27 @@
     }
 
     thead {
-        background: #2b2b2b;
+        background: var(--bg-surface-hover);
     }
 
     th {
         text-align: left;
         padding: 0.875rem;
-        color: #9ca3af;
+        color: var(--text-secondary);
         font-weight: 600;
-        font-size: 0.875rem;
-        border-bottom: 2px solid #333;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
     }
 
     tr {
-        border-bottom: 1px solid #2b2b2b;
+        border-bottom: 1px solid rgba(45, 51, 66, 0.5);
         transition: background 0.2s ease;
     }
 
     tr:hover {
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(255, 255, 255, 0.02);
     }
 
     tr.win {
@@ -472,55 +476,54 @@
     td {
         padding: 0.875rem;
         font-size: 0.875rem;
-        color: #e5e7eb;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
     }
 
     .symbol {
         font-weight: 600;
-        color: #06b6d4;
+        color: var(--accent-primary);
     }
 
     .side-badge {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         padding: 0.25rem 0.625rem;
-        border-radius: 6px;
+        border-radius: var(--radius-full);
         font-size: 0.75rem;
         font-weight: 600;
+        text-transform: uppercase;
     }
 
     .side-badge.long {
-        background: rgba(16, 185, 129, 0.2);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.5);
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--status-success);
+        border: 1px solid rgba(16, 185, 129, 0.2);
     }
 
     .side-badge.short {
-        background: rgba(239, 68, 68, 0.2);
-        color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.5);
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--status-danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
     .price {
-        font-family: "Courier New", monospace;
+        font-family: var(--font-mono);
         font-weight: 500;
-    }
-
-    .duration {
-        color: #9ca3af;
-        font-size: 0.8125rem;
+        color: var(--text-primary);
     }
 
     .pnl {
         font-weight: 700;
-        font-family: "Courier New", monospace;
+        font-family: var(--font-mono);
     }
 
     .pnl.profit {
-        color: #10b981;
+        color: var(--status-success);
     }
 
     .pnl.loss {
-        color: #ef4444;
+        color: var(--status-danger);
     }
 
     .timestamp {
